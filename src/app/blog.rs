@@ -1,4 +1,6 @@
 use yew::prelude::*;
+use yew::virtual_dom::VNode;
+use markdown::to_html;
 
 #[derive(Clone, PartialEq)]
 pub enum Category {
@@ -14,6 +16,7 @@ pub struct Post {
     content: String,
     date: String,
     category: Category,
+    contentnum: i32,
 }
 
 #[derive(Properties, PartialEq)]
@@ -58,28 +61,46 @@ pub fn blog() -> Html {
                 content: "웹개발 카테고리 테스트".to_string(),
                 date: "2024년 12월 1일".to_string(),
                 category: Category::WebDev,
+                contentnum: 1,
             },
             Post {
                 title: "PS 카테고리 테스트".to_string(),
                 content: "PS 카테고리 테스트".to_string(),
                 date: "2024년 12월 2일".to_string(),
                 category: Category::PS,
+                contentnum: 2,
             },
             Post {
                 title: "기타 카테고리 테스트".to_string(),
                 content: "기타 카테고리 테스트".to_string(),
                 date: "2024년 12월 3일".to_string(),
                 category: Category::Other,
+                contentnum: 3,
             },
             Post {
-                title: "테스트중입니다...".to_string(),
+                title: "살려주세요".to_string(),
                 content: "어케해야될지모르겠어요".to_string(),
-                date: "대가리박치기중입니다".to_string(),
+                date: "2024년 12월 12일".to_string(),
                 category: Category::Other,
+                contentnum: 4,
             },
         ]
     });
 
+    let selected_post_content = use_state(|| String::new());
+    let content_cache = use_state(|| std::collections::HashMap::<i32, String>::new());
+
+    let markdown_content = {
+        let div = web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .create_element("div")
+            .unwrap();
+        div.set_inner_html(&to_html(&*selected_post_content));
+        VNode::VRef(div.into())
+    };
+    
     let filtered_posts = posts.iter().filter(|post| {
         match (*selected_category).clone() {
             Category::All => true,
@@ -103,14 +124,43 @@ pub fn blog() -> Html {
         }).count() as i32
     };
 
+    let on_post_click = {
+        let selected_post_content = selected_post_content.clone();
+        let content_cache = content_cache.clone();
+        Callback::from(move |contentnum: i32| {
+            let selected_post_content = selected_post_content.clone();
+            let content_cache = content_cache.clone();
+            
+            if let Some(cached_content) = content_cache.get(&contentnum) {
+                selected_post_content.set(cached_content.clone());
+                return;
+            }
+
+            wasm_bindgen_futures::spawn_local(async move {
+                let response = reqwest::get(format!("https://api.plaaa.at/blog/{}.md", contentnum))
+                    .await
+                    .unwrap()
+                    .text()
+                    .await
+                    .unwrap();
+                
+                let mut new_cache = (*content_cache).clone();
+                new_cache.insert(contentnum, response.clone());
+                content_cache.set(new_cache);
+                
+                selected_post_content.set(response);
+            });
+        })
+    };
+
     html! {
         <div class="container mx-auto px-4 py-8">
             <div class="flex gap-8">
                 // 왼쪽 카테고리 바
                 <div class="w-64 flex-shrink-0">
-                    <h1 class="text-4xl font-bold mb-8 text-center">{"블로그"}</h1>
+                    <h1 class="text-4xl font-bold font-nanum-gothic mb-8 text-center">{"블로그"}</h1>
                     <div class="bg-white rounded-lg shadow-md p-4">
-                        <h2 class="text-lg font-semibold mb-4">{"카테고리"}</h2>
+                        <h2 class="text-lg font-semibold font-nanum-gothic mb-4">{"카테고리"}</h2>
                         <div class="space-y-1">
                             <CategoryItem 
                                 name="전체글" 
@@ -127,7 +177,7 @@ pub fn blog() -> Html {
                                 onclick={on_category_select.clone()}
                             />
                             <CategoryItem 
-                                name="웹개발" 
+                                name="웹 개발" 
                                 count={count_posts(&Category::WebDev)} 
                                 selected={*selected_category == Category::WebDev}
                                 category={Category::WebDev}
@@ -142,22 +192,29 @@ pub fn blog() -> Html {
                             />
                         </div>
                     </div>
-                </div>
-
-                // 메인 콘텐츠 영역
-                <div class="flex-grow">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                    <br/>
+                    <br/>
+                    <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-1">
                         {for filtered_posts.map(|post| {
+                            let contentnum = post.contentnum;
                             html! {
-                                <div class="bg-white rounded-lg shadow-md p-6">
-                                    <h2 class="text-xl font-semibold mb-4">{&post.title}</h2>
-                                    <p class="text-gray-600">{&post.content}</p>
-                                    <div class="mt-4">
-                                        <span class="text-sm text-gray-500">{&post.date}</span>
+                                <div class="bg-white rounded-lg shadow-md p-2 hover:bg-gray-50" 
+                                    onclick={on_post_click.reform(move |_| contentnum)} 
+                                >
+                                    <h2 class="text-l font-semibold font-nanum-gothic mb-1">{&post.title}</h2>
+                                    <div class="mt-1">
+                                        <span class="text-sm text-gray-500 font-nanum-gothic">{&post.date}</span>
                                     </div>
                                 </div>
                             }
                         })}
+                    </div>
+                </div>
+
+                // 메인 콘텐츠 영역
+                <div class="flex-grow font-nanum-gothic">
+                    <div class="mt-8 prose prose-slate max-w-none">
+                        {markdown_content}
                     </div>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 module.exports = {
     mode: "jit",
     content: {
-      files: ["src/**/*.rs", "**/*.html"],
+      files: ["src/**/*.rs", "**/*.html", "**/*.css"],
     },
     darkMode: "class", // 'media' or 'class'
     theme: {
@@ -22,5 +22,7 @@ module.exports = {
     variants: {
       extend: {},
     },
-    plugins: [],
+    plugins: [
+      require('@tailwindcss/typography'),
+    ],
   };

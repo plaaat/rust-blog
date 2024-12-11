@@ -15,7 +15,7 @@ pub fn about() -> Html {
                     <br/>
                     { "저는 PlaaaT 이남규 입니다." }
                 </p>
-                <p class="font-nanum-gothic text-3xl">
+                <p class="font-nanum-gothic text-xl">
                     <br/>
                     <div class="flex items-center justify-between">
                         { "저는 2005년 12월 4일 생입니다."}

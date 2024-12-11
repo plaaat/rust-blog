@@ -30,6 +30,7 @@ web-sys = { version = "0.3", features = [
     "Document"
 ]}
 wasm-bindgen-futures = "0.4"
+markdown = "1.0.0-alpha.21"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
