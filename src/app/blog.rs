@@ -155,9 +155,9 @@ pub fn blog() -> Html {
 
     html! {
         <div class="container mx-auto px-4 py-8">
-            <div class="flex gap-8">
-                // 왼쪽 카테고리 바
-                <div class="w-64 flex-shrink-0">
+            <div class="flex flex-col lg:flex-row gap-8">
+                //왼쪽 카테고리 바
+                <div class="w-full lg:w-64 flex-shrink-0">
                     <h1 class="text-4xl font-bold font-nanum-gothic mb-8 text-center">{"블로그"}</h1>
                     <div class="bg-white rounded-lg shadow-md p-4">
                         <h2 class="text-lg font-semibold font-nanum-gothic mb-4">{"카테고리"}</h2>
@@ -194,7 +194,7 @@ pub fn blog() -> Html {
                     </div>
                     <br/>
                     <br/>
-                    <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-1">
+                    <div class="grid grid-cols-1 gap-1">
                         {for filtered_posts.map(|post| {
                             let contentnum = post.contentnum;
                             html! {
@@ -211,7 +211,7 @@ pub fn blog() -> Html {
                     </div>
                 </div>
 
-                // 메인 콘텐츠 영역
+                //메인 콘텐츠 영역
                 <div class="flex-grow font-nanum-gothic">
                     <div class="mt-8 prose prose-slate max-w-none">
                         {markdown_content}
