@@ -32,7 +32,6 @@ pub fn about() -> Html {
                         { "경험을 쌓기 위한 용도로 제작중 입니다." }
                         <br/>
                         <br/>
-                        <img src="logo.svg" alt="PlaaT" class="w-64 h-64" />
                     </div>
                     {"새로운 도전을 좋아합니당 ^ㅁ^"}
                     <br/>

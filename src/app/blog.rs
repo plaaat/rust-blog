@@ -1,8 +1,10 @@
 use yew::prelude::*;
 use yew::virtual_dom::VNode;
 use markdown::to_html;
+use serde::Deserialize;
+use gloo_net::http::Request;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Deserialize)]
 pub enum Category {
     All,
     PS,
@@ -10,7 +12,7 @@ pub enum Category {
     Other,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Deserialize)]
 pub struct Post {
     title: String,
     content: String,
@@ -54,39 +56,20 @@ fn category_item(props: &CategoryProps) -> Html {
 #[function_component(Blog)]
 pub fn blog() -> Html {
     let selected_category = use_state(|| Category::All);
-    let posts = use_state(|| {
-        vec![
-            Post {
-                title: "웹개발 카테고리 테스트".to_string(),
-                content: "웹개발 카테고리 테스트".to_string(),
-                date: "2024년 12월 1일".to_string(),
-                category: Category::WebDev,
-                contentnum: 1,
-            },
-            Post {
-                title: "PS 카테고리 테스트".to_string(),
-                content: "PS 카테고리 테스트".to_string(),
-                date: "2024년 12월 2일".to_string(),
-                category: Category::PS,
-                contentnum: 2,
-            },
-            Post {
-                title: "기타 카테고리 테스트".to_string(),
-                content: "기타 카테고리 테스트".to_string(),
-                date: "2024년 12월 3일".to_string(),
-                category: Category::Other,
-                contentnum: 3,
-            },
-            Post {
-                title: "살려주세요".to_string(),
-                content: "어케해야될지모르겠어요".to_string(),
-                date: "2024년 12월 12일".to_string(),
-                category: Category::Other,
-                contentnum: 4,
-            },
-        ]
-    });
-
+    let posts = use_state(|| vec![]);
+    {
+        let posts = posts.clone();
+        use_effect_with((),move |_| {
+            let posts = posts.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                let fetched_posts:Vec<Post> = Request::get("https://api.plaaa.at/blog/posts.json")
+                    .send().await.unwrap()
+                    .json().await.unwrap();
+                posts.set(fetched_posts);
+            });
+            || ()
+        });
+    }
     let selected_post_content = use_state(|| String::new());
     let content_cache = use_state(|| std::collections::HashMap::<i32, String>::new());
 
@@ -137,12 +120,10 @@ pub fn blog() -> Html {
             }
 
             wasm_bindgen_futures::spawn_local(async move {
-                let response = reqwest::get(format!("https://api.plaaa.at/blog/{}.md", contentnum))
-                    .await
-                    .unwrap()
-                    .text()
-                    .await
-                    .unwrap();
+                let url = format!("https://api.plaaa.at/blog/{}.md",contentnum);
+                let response = Request::get(&url)
+                    .send().await.unwrap()
+                    .text().await.unwrap();
                 
                 let mut new_cache = (*content_cache).clone();
                 new_cache.insert(contentnum, response.clone());
