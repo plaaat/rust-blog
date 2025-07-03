@@ -1,4 +1,4 @@
-# My Awesome Yew App
+# My Awesome Yew App[DEPRECATED]
 
 This is the official base template for [Create Yew App](https://github.com/jetli/create-yew-app).
 
